@@ -1,0 +1,9 @@
+groups:
+  - name: demo
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 30s
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.job }} on {{ $labels.instance }} is not responding"

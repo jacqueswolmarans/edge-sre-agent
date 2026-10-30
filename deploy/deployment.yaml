@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-sre-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: edge-sre-agent }
+  template:
+    metadata:
+      labels: { app: edge-sre-agent }
+    spec:
+      serviceAccountName: edge-sre-agent
+      securityContext: { runAsNonRoot: true }
+      containers:
+        - name: agent
+          image: ghcr.io/jacqueswolmarans/edge-sre-agent:latest
+          args: [slack]
+          env:
+            - { name: KUBERNETES_ENABLED, value: "true" }
+            - { name: PROMETHEUS_URL, value: http://prometheus-operated.monitoring:9090 }
+            - { name: LOKI_URL, value: http://loki-gateway.monitoring }
+          envFrom:
+            - secretRef: { name: edge-sre-agent }   # SLACK_BOT_TOKEN, SLACK_APP_TOKEN, LLM_API_KEY
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
